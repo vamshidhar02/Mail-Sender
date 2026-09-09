@@ -20,8 +20,8 @@ export class TemplatesService {
     const where: Prisma.TemplateWhereInput = query.search
       ? {
           OR: [
-            { name: { contains: query.search } },
-            { subject: { contains: query.search } },
+            { name: { contains: query.search, mode: 'insensitive' } },
+            { subject: { contains: query.search, mode: 'insensitive' } },
           ],
         }
       : {};

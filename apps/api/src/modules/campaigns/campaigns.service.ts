@@ -28,7 +28,7 @@ export class CampaignsService {
   async findAll(query: QueryCampaignsDto): Promise<Paginated<Campaign>> {
     const where: Prisma.CampaignWhereInput = {
       ...(query.status ? { status: query.status } : {}),
-      ...(query.search ? { name: { contains: query.search } } : {}),
+      ...(query.search ? { name: { contains: query.search, mode: 'insensitive' } } : {}),
     };
 
     const [items, total] = await this.prisma.$transaction([

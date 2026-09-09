@@ -55,19 +55,21 @@ CampaignList                          CampaignMessage
   so they cannot drift out of sync with reality.
 - `Contact.attributes` is JSON, so adding a merge field needs no migration.
 
-### SQLite constraints
+### Datasource
 
-The datasource is SQLite, which shapes three things:
+The datasource is Postgres, both locally and in production (Neon). The project
+started on SQLite; the move left two things worth knowing:
 
-- `Template.variables` is `Json` holding an array of strings. SQLite has no
-  scalar-list type, so `String[]` is unavailable.
-- Neither JSON column carries a DB-level default. Prisma emits an unquoted
-  `DEFAULT {}` for SQLite, which is not valid SQL, so both fields are written
-  explicitly by the services instead.
-- The `contains` filters omit `mode: 'insensitive'`, which SQLite rejects. Its
-  `LIKE` is already case-insensitive for ASCII, so search behaves identically.
+- `Template.variables` is `Json` holding an array of strings rather than a
+  native `String[]`. Postgres supports the scalar list, but the serializers and
+  `TemplatesService` read the column as JSON, so it stays as-is. Switching is a
+  contained change if a query ever needs to filter on it.
+- Both JSON columns now carry DB-level defaults (`{}` and `[]`). The services
+  still always write them explicitly, so the defaults only matter for rows
+  inserted outside the application.
 
-All three are noted in the README's Postgres migration checklist.
+Search uses `mode: 'insensitive'` on every `contains` filter, which Postgres
+needs in order to match case-insensitively.
 
 ## Send path
 
@@ -82,7 +84,7 @@ All three are noted in the README's Postgres migration checklist.
 4. Mark the campaign `SENT`. An infrastructure-level throw marks it `FAILED`;
    per-recipient errors do not.
 
-Verified end to end against SQLite with the file transport: a 10-recipient
+Verified end to end with the file transport: a 10-recipient
 seeded campaign produced 10 `.eml` files with per-recipient merge fields,
 `stats` reported `sent: 10, failed: 0`, an unsubscribed contact was excluded
 from a later send, and re-sending a `SENT` campaign was rejected.

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -48,8 +48,7 @@ model Contact {
   lastName   String?
   status     ContactStatus @default(SUBSCRIBED)
   /// Arbitrary merge data exposed to templates as {{attributes.key}}.
-  /// No DB default: SQLite cannot express a JSON literal default.
-  attributes Json
+  attributes Json          @default("{}")
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
@@ -80,9 +79,8 @@ model Template {
   html      String
   text      String?
   /// Merge tags detected at save time, cached for the campaign editor.
-  /// JSON array of strings: SQLite has no native scalar-list type.
-  /// Always written by TemplatesService, so no DB default is needed.
-  variables Json
+  /// A JSON array of strings, always written by TemplatesService.
+  variables Json     @default("[]")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

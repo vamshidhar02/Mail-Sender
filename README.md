@@ -2,13 +2,14 @@
 
 Bulk mail dispatcher, set up as a pnpm monorepo.
 
-**Current state:** backend (NestJS + Prisma + SQLite) and dashboard
+**Current state:** backend (NestJS + Prisma + Postgres) and dashboard
 (React + Ant Design + Tailwind + RTK Query) are both implemented. Every endpoint
 is unauthenticated — see Next steps.
 
-**No external services required.** The database is a SQLite file and outbound
-mail is written to disk as `.eml` files, so `pnpm install` and a migration are
-all it takes to run a real campaign locally.
+**No mail server required.** Outbound mail is written to disk as `.eml` files in
+development, so a Postgres container and a migration are all it takes to run a
+real campaign locally. Deployed, it runs on Vercel + Render + Neon + Resend —
+see [docs/deployment.md](docs/deployment.md).
 
 ## Layout
 
@@ -16,7 +17,7 @@ all it takes to run a real campaign locally.
 .
 ├── apps/
 │   ├── api/                  NestJS backend (implemented)
-│   │   ├── prisma/           schema, migrations, seed, dev.db
+│   │   ├── prisma/           schema, migrations, seed
 │   │   ├── src/
 │   │   └── storage/mail/     .eml files written by the file transport
 │   └── web/                  React dashboard (Vite + AntD + RTK Query)
@@ -30,8 +31,9 @@ all it takes to run a real campaign locally.
 
 - Node 20+
 - pnpm 9+
+- Postgres 14+ (a container is fine)
 
-That is the whole list. No Docker, no database server, no mail server.
+No mail server needed.
 
 ## Getting started
 
@@ -39,7 +41,10 @@ That is the whole list. No Docker, no database server, no mail server.
 pnpm install
 cp .env.example .env
 
-pnpm db:migrate     # creates apps/api/prisma/dev.db and runs the seed
+# Any Postgres will do; this matches the DATABASE_URL in .env.example.
+docker run --rm -d -p 5432:5432   -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=mailer postgres:16
+
+pnpm db:migrate     # applies migrations and runs the seed
 pnpm dev            # API on :4000, dashboard on :5173
 ```
 
@@ -126,19 +131,19 @@ the campaign in `SENDING`. The natural next step is moving the per-message send
 onto a job queue so the request returns immediately and individual failures retry
 on their own.
 
-## Choosing a production database
+## Deployment
 
-SQLite is right for local development and small deployments, but it is a single
-file with one writer. Moving to Postgres later is a small change:
+`apps/web` deploys to Vercel as a static Vite build; `apps/api` deploys to Render
+as a long-lived Node process, backed by Neon Postgres and sending through Resend.
+The API's settings live in [`render.yaml`](render.yaml), the web's in
+[`apps/web/vercel.json`](apps/web/vercel.json).
 
-1. `provider = "postgresql"` in `prisma/schema.prisma`, and a Postgres
-   `DATABASE_URL`.
-2. `Contact.attributes` and `Template.variables` can go back to native types
-   (`Json` with a default, `String[]`).
-3. Re-add `mode: 'insensitive'` to the `contains` filters in the services —
-   Postgres needs it for case-insensitive search; SQLite does not support it and
-   does not need it.
-4. Delete `prisma/migrations/` and generate a fresh initial migration.
+Full walkthrough, including the environment variables each platform needs:
+**[docs/deployment.md](docs/deployment.md)**.
+
+The API is not deployed to Vercel because a campaign send runs inline for the
+whole duration of the request, which outlives a serverless function's timeout.
+Moving the send to a job queue would remove that constraint.
 
 ## Next steps
 

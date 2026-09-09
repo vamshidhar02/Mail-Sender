@@ -40,8 +40,10 @@ async function bootstrap() {
     .build();
   SwaggerModule.setup(prefix + '/docs', app, SwaggerModule.createDocument(app, swagger));
 
-  await app.listen(port);
-  Logger.log('API ready on http://localhost:' + port + '/' + prefix, 'Bootstrap');
+  // 0.0.0.0, not the default localhost: a container's health check and
+  // router reach the process from outside its own loopback interface.
+  await app.listen(port, '0.0.0.0');
+  Logger.log('API ready on port ' + port + ' under /' + prefix, 'Bootstrap');
 }
 
 void bootstrap();

@@ -18,14 +18,12 @@ export class ContactsService {
     const where: Prisma.ContactWhereInput = {
       ...(query.status ? { status: query.status } : {}),
       ...(query.listId ? { memberships: { some: { listId: query.listId } } } : {}),
-      // No `mode: 'insensitive'` here: SQLite does not support it, and its LIKE
-      // is already case-insensitive for ASCII, so search behaves the same.
       ...(query.search
         ? {
             OR: [
-              { email: { contains: query.search } },
-              { firstName: { contains: query.search } },
-              { lastName: { contains: query.search } },
+              { email: { contains: query.search, mode: 'insensitive' } },
+              { firstName: { contains: query.search, mode: 'insensitive' } },
+              { lastName: { contains: query.search, mode: 'insensitive' } },
             ],
           }
         : {}),

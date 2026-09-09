@@ -19,6 +19,7 @@ export function AppLayout() {
         <Content className="overflow-auto p-6">
           <div className="mx-auto max-w-[1400px]">
             <Outlet />
+            
           </div>
         </Content>
       </Layout>

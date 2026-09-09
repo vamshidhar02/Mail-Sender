@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { ContactStatus, type ContactList, type Paginated } from '@mailer/shared';
 
 import { PrismaService } from '../../prisma/prisma.service';
@@ -12,8 +13,10 @@ export class ContactListsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: PaginationDto): Promise<Paginated<ContactList>> {
-    const where = query.search
-      ? { name: { contains: query.search } }
+    // Annotated, not inferred: without the type, `mode` widens to `string`
+    // and no longer matches Prisma's QueryMode enum.
+    const where: Prisma.ContactListWhereInput = query.search
+      ? { name: { contains: query.search, mode: 'insensitive' } }
       : {};
 
     const [items, total] = await this.prisma.$transaction([
