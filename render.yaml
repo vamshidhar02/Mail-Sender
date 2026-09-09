@@ -17,8 +17,14 @@ services:
     # --prod=false is load-bearing: NODE_ENV=production (set below) otherwise
     # makes pnpm skip devDependencies, and the build needs @nestjs/cli, prisma
     # and typescript, all of which live there.
+    #
+    # pnpm comes from npm rather than `corepack enable`: the corepack bundled
+    # with Node 20.18.0 checks registry signatures against npm signing keys that
+    # have since been rotated, and dies with "Cannot find matching keyid" before
+    # it ever reads packageManager. Keep this version in sync with
+    # packageManager in the root package.json.
     buildCommand: >-
-      corepack enable &&
+      npm install -g pnpm@9.12.2 &&
       pnpm install --frozen-lockfile --prod=false &&
       pnpm --filter @mailer/shared build &&
       pnpm --filter @mailer/api prisma:generate:prod &&
