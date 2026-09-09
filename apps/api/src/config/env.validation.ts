@@ -1,0 +1,29 @@
+import { z } from 'zod';
+
+/**
+ * Fail fast at boot rather than at the first send - a missing DATABASE_URL
+ * should never surface as a runtime 500.
+ */
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  API_PORT: z.coerce.number().int().positive().default(4000),
+  DATABASE_URL: z.string().url(),
+  MAIL_TRANSPORT: z.enum(['file', 'smtp']).default('file'),
+  SMTP_HOST: z.string().min(1).default('localhost'),
+  SMTP_PORT: z.coerce.number().int().positive().default(1025),
+  // Not z.email(): the local Mailpit default (no-reply@localhost) has no TLD.
+  MAIL_FROM_ADDRESS: z.string().regex(/^[^\s@]+@[^\s@]+$/, 'Must be an email address'),
+});
+
+export type Env = z.infer<typeof envSchema>;
+
+export function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
+  const result = envSchema.safeParse(config);
+  if (!result.success) {
+    const issues = result.error.issues
+      .map((issue) => '  - ' + issue.path.join('.') + ': ' + issue.message)
+      .join('\n');
+    throw new Error('Invalid environment configuration:\n' + issues);
+  }
+  return { ...config, ...result.data };
+}

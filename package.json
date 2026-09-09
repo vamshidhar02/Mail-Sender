@@ -1,0 +1,31 @@
+{
+  "name": "mail-sender",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bulk mail dispatcher - NestJS API + React/AntD dashboard",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.12.2",
+  "scripts": {
+    "build": "pnpm --filter @mailer/shared build && pnpm --filter @mailer/api build && pnpm --filter @mailer/web build",
+    "clean": "pnpm -r exec rimraf dist node_modules && rimraf node_modules",
+    "db:migrate": "pnpm --filter @mailer/api prisma:migrate",
+    "db:reset": "pnpm --filter @mailer/api prisma:reset",
+    "db:seed": "pnpm --filter @mailer/api prisma:seed",
+    "db:studio": "pnpm --filter @mailer/api prisma:studio",
+    "dev": "pnpm --filter @mailer/shared build && pnpm --parallel --filter \"./apps/*\" dev",
+    "dev:api": "pnpm --filter @mailer/shared build && pnpm --filter @mailer/api dev",
+    "dev:web": "pnpm --filter @mailer/shared build && pnpm --filter @mailer/web dev",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml}\"",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3"
+  }
+}

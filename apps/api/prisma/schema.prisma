@@ -1,0 +1,143 @@
+// Bulk mail dispatcher - minimal schema.
+// Regenerate the client with `pnpm --filter @mailer/api prisma:generate`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ContactStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+  FAILED
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model ContactList {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships ContactListMembership[]
+  campaigns   CampaignList[]
+
+  @@map("contact_lists")
+}
+
+model Contact {
+  id         String        @id @default(cuid())
+  email      String        @unique
+  firstName  String?
+  lastName   String?
+  status     ContactStatus @default(SUBSCRIBED)
+  /// Arbitrary merge data exposed to templates as {{attributes.key}}.
+  /// No DB default: SQLite cannot express a JSON literal default.
+  attributes Json
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  memberships ContactListMembership[]
+  messages    CampaignMessage[]
+
+  @@index([status])
+  @@map("contacts")
+}
+
+model ContactListMembership {
+  contactId String
+  listId    String
+  addedAt   DateTime @default(now())
+
+  contact Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  list    ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, listId])
+  @@index([listId])
+  @@map("contact_list_memberships")
+}
+
+model Template {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  html      String
+  text      String?
+  /// Merge tags detected at save time, cached for the campaign editor.
+  /// JSON array of strings: SQLite has no native scalar-list type.
+  /// Always written by TemplatesService, so no DB default is needed.
+  variables Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaigns Campaign[]
+
+  @@map("templates")
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  status      CampaignStatus @default(DRAFT)
+  templateId  String
+  fromName    String
+  fromEmail   String
+  replyTo     String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  template Template          @relation(fields: [templateId], references: [id])
+  lists    CampaignList[]
+  messages CampaignMessage[]
+
+  @@index([status])
+  @@map("campaigns")
+}
+
+model CampaignList {
+  campaignId String
+  listId     String
+
+  campaign Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  list     ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, listId])
+  @@map("campaign_lists")
+}
+
+/// One row per recipient per campaign - the send log.
+model CampaignMessage {
+  id         String        @id @default(cuid())
+  campaignId String
+  contactId  String
+  email      String
+  status     MessageStatus @default(PENDING)
+  error      String?
+  sentAt     DateTime?
+  createdAt  DateTime      @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact  Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, contactId])
+  @@index([campaignId, status])
+  @@map("campaign_messages")
+}

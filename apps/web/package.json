@@ -1,0 +1,39 @@
+{
+  "name": "@mailer/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 0",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "test": "echo \"(no web tests yet)\""
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.5.2",
+    "@mailer/shared": "workspace:*",
+    "@reduxjs/toolkit": "^2.5.0",
+    "antd": "^5.22.7",
+    "dayjs": "^1.11.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.18.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.20.0",
+    "vite": "^6.0.7"
+  }
+}
