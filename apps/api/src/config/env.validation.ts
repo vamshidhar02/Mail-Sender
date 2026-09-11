@@ -7,6 +7,18 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().positive().default(4000),
+  CORS_ORIGINS: z
+    .string()
+    .default('')
+    .refine(
+      (value) =>
+        value
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean)
+          .every((origin) => /^https?:\/\/[^/?#\s]+[/]*$/.test(origin)),
+      'Each origin must be http(s)://host[:port], comma-separated, with no path',
+    ),
   DATABASE_URL: z.string().url(),
   MAIL_TRANSPORT: z.enum(['file', 'smtp']).default('file'),
   SMTP_HOST: z.string().min(1).default('localhost'),

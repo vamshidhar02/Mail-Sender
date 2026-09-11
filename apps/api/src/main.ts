@@ -16,10 +16,22 @@ async function bootstrap() {
   const prefix = config.get<string>('app.prefix', 'api');
   const port = config.get<number>('app.port', 4000);
   const origins = config.get<string[]>('app.corsOrigins', []);
+  const isDevelopment = config.get<string>('app.env') === 'development';
 
   app.setGlobalPrefix(prefix);
   app.use(helmet());
-  app.enableCors({ origin: origins.length ? origins : true, credentials: true });
+  if (origins.length) {
+    app.enableCors({ origin: origins, credentials: true });
+  } else if (isDevelopment) {
+    app.enableCors({ origin: true, credentials: true });
+  } else {
+    app.enableCors({ origin: false });
+    Logger.warn(
+      'CORS_ORIGINS is unset: cross-origin browser requests are blocked. Set it to ' +
+        'the dashboard origin - see docs/deployment.md step 5.',
+      'Bootstrap',
+    );
+  }
   app.enableShutdownHooks();
 
   app.useGlobalPipes(

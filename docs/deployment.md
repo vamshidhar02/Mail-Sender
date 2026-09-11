@@ -12,7 +12,12 @@ Backing services: **Neon** (Postgres) and **Resend** (SMTP).
 > **Ordering note.** The API needs the web's URL for CORS, and the web needs the
 > API's URL to call it — and you cannot know either before deploying. So: step 3
 > deploys the API with `CORS_ORIGINS` unset, step 4 deploys the web against the
-> API's URL, and step 5 comes back to lock down CORS. Expect the round trip.
+> API's URL, and step 5 comes back to set CORS. Expect the round trip.
+>
+> Until step 5 the deployed dashboard will **not** be able to call the API: with
+> `NODE_ENV=production` and no allowlist, the API denies cross-origin requests
+> rather than allowing all of them. `curl` still works throughout, so you can
+> verify the API in step 3 — the browser is the only thing waiting on step 5.
 
 ---
 
@@ -65,7 +70,7 @@ anything else, and the app surfaces that as a failed send per recipient.
    | `SMTP_PASSWORD`     | the Resend API key from step 2                           |
    | `MAIL_FROM_NAME`    | e.g. `Mail Sender`                                       |
    | `MAIL_FROM_ADDRESS` | e.g. `no-reply@your-verified-domain.com`                 |
-   | `CORS_ORIGINS`      | **leave blank for now** — locked down at step 5          |
+   | `CORS_ORIGINS`      | **leave blank for now** — set at step 5                  |
 
    Everything else (`MAIL_TRANSPORT=smtp`, `SMTP_HOST`, ports, `API_PREFIX`) is
    already set in `render.yaml`.
@@ -101,15 +106,29 @@ Note your API's URL. Interactive docs are at `/api/docs`.
    RTK Query client in `src/services/api/baseApi.ts` appends paths directly to it.
 5. Deploy, and note the resulting `https://….vercel.app` URL.
 
+   The dashboard will load but its API calls will fail with CORS errors until
+   you finish step 5. That is expected, not a misconfiguration.
+
 Vite inlines `VITE_*` variables **at build time**. Changing this value later
 requires a redeploy, not just a settings save.
 
-## 5. Lock down CORS
+## 5. Set CORS
 
-While `CORS_ORIGINS` is blank the API reflects **any** origin — `main.ts` falls
-back to `origin: true`. That is why step 4 works before this step, and it is
-also why you should not leave it that way: any website can call your API from a
-visitor's browser, and every endpoint is currently unauthenticated.
+`main.ts` treats a blank `CORS_ORIGINS` differently per environment:
+
+| `NODE_ENV`               | blank `CORS_ORIGINS` means                      |
+| ------------------------ | ----------------------------------------------- |
+| `development`            | reflect any origin — a local convenience         |
+| anything else (`production` on Render) | deny all cross-origin requests |
+
+Production denies rather than reflects because every endpoint here is
+unauthenticated: reflecting any origin would let any website drive this API
+from a visitor's browser. So this step is required, not just hardening — the
+dashboard cannot reach the API until you complete it. The boot log says so:
+
+```
+[Bootstrap] CORS_ORIGINS is unset: cross-origin browser requests are blocked.
+```
 
 In Render → your service → **Environment**, set:
 
@@ -117,12 +136,17 @@ In Render → your service → **Environment**, set:
 CORS_ORIGINS = https://your-app.vercel.app
 ```
 
-No trailing slash, and comma-separate to add more (a custom domain, or a Vercel
-preview URL you actively test against). Save; Render restarts automatically.
+Comma-separate to add more (a custom domain, or a Vercel preview URL you
+actively test against). Save; Render restarts automatically.
 
-If the dashboard breaks right after this step — API calls failing in the browser
-with a CORS error while the same URL works under `curl` — the value does not
-match the origin exactly. A trailing slash or `http` vs `https` is enough.
+A trailing slash is tolerated — `configuration.ts` strips it — but a value that
+is not `scheme://host[:port]` fails validation at boot with
+`Invalid environment configuration`, so check the deploy log if the service
+does not come back up.
+
+If the dashboard still fails in the browser with a CORS error while the same URL
+works under `curl`, the origin does not match exactly — `http` vs `https`, or a
+different subdomain, is enough.
 
 ## 6. Seed (optional)
 
