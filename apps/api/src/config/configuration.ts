@@ -8,7 +8,7 @@ const toInt = (value: string | undefined, fallback: number) => {
 
 export default () => ({
   app: {
-    env: process.env.NODE_ENV ?? 'development',
+    env: process.env.NODE_ENV ?? 'production',
     // Hosted platforms (Render, Railway, Fly) inject PORT and expect the
     // process to bind it; API_PORT stays the local-development knob.
     port: toInt(process.env.PORT ?? process.env.API_PORT, 4000),

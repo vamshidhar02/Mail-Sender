@@ -16,7 +16,8 @@ async function bootstrap() {
   const prefix = config.get<string>('app.prefix', 'api');
   const port = config.get<number>('app.port', 4000);
   const origins = config.get<string[]>('app.corsOrigins', []);
-  const isDevelopment = config.get<string>('app.env') === 'development';
+
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   app.setGlobalPrefix(prefix);
   app.use(helmet());

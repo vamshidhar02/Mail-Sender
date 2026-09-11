@@ -5,7 +5,8 @@ import { z } from 'zod';
  * should never surface as a runtime 500.
  */
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('production'),
   API_PORT: z.coerce.number().int().positive().default(4000),
   CORS_ORIGINS: z
     .string()

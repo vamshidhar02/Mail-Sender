@@ -116,10 +116,14 @@ requires a redeploy, not just a settings save.
 
 `main.ts` treats a blank `CORS_ORIGINS` differently per environment:
 
-| `NODE_ENV`               | blank `CORS_ORIGINS` means                      |
-| ------------------------ | ----------------------------------------------- |
-| `development`            | reflect any origin — a local convenience         |
-| anything else (`production` on Render) | deny all cross-origin requests |
+| `NODE_ENV`                    | blank `CORS_ORIGINS` means                  |
+| ----------------------------- | ------------------------------------------- |
+| exactly `development`         | reflect any origin — a local convenience     |
+| `production`, `test`, **or unset** | deny all cross-origin requests          |
+
+Unset counts as production on purpose: the permissive branch must not be
+reachable by forgetting a variable on a host, so `NODE_ENV` defaults to
+`production` in `env.validation.ts` and only an explicit `development` opts in.
 
 Production denies rather than reflects because every endpoint here is
 unauthenticated: reflecting any origin would let any website drive this API
