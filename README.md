@@ -3,8 +3,8 @@
 Bulk mail dispatcher, set up as a pnpm monorepo.
 
 **Current state:** backend (NestJS + Prisma + Postgres) and dashboard
-(React + Ant Design + Tailwind + RTK Query) are both implemented. Every endpoint
-is unauthenticated — see Next steps.
+(React + Ant Design + Tailwind + RTK Query) are both implemented. Sign-in is
+Google OAuth; every endpoint except `/health` requires a bearer token.
 
 **No mail server required.** Outbound mail is written to disk as `.eml` files in
 development, so a Postgres container and a migration are all it takes to run a
@@ -147,7 +147,8 @@ Moving the send to a job queue would remove that constraint.
 
 ## Next steps
 
-- Auth (JWT) — every endpoint is currently unauthenticated.
+- Restrict sign-in — `AUTH_ALLOWED_EMAILS` is blank, so **any** Google account
+  can sign in and send mail. Set it to your own address.
 - Job queue for sending, with retries and rate limiting.
 - CSV contact import.
 - Open/click tracking and provider bounce webhooks.

@@ -19,6 +19,30 @@ export default () => ({
       .map((origin) => origin.trim().replace(/[/]+$/, ''))
       .filter(Boolean),
   },
+  auth: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+      // Must match an Authorised redirect URI in the Google Cloud console
+      // character for character, including the /api prefix and the scheme.
+      callbackUrl:
+        process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:4000/api/auth/google/callback',
+    },
+    jwt: {
+      secret: process.env.JWT_SECRET ?? '',
+      expiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+    },
+    // Where the browser is sent once a token is signed: the dashboard's
+    // origin, not the API's. Trailing slashes stripped for the same reason
+    // as corsOrigins above.
+    webAppUrl: (process.env.WEB_APP_URL ?? 'http://localhost:5173').replace(/[/]+$/, ''),
+    // Comma-separated addresses allowed to sign in. Blank - the default -
+    // accepts any Google account.
+    allowedEmails: (process.env.AUTH_ALLOWED_EMAILS ?? '')
+      .split(',')
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  },
   mail: {
     /** 'file' writes .eml files to disk (no server needed); 'smtp' really sends. */
     transport: (process.env.MAIL_TRANSPORT ?? 'file').toLowerCase(),

@@ -21,6 +21,15 @@ const envSchema = z.object({
       'Each origin must be http(s)://host[:port], comma-separated, with no path',
     ),
   DATABASE_URL: z.string().url(),
+
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
+  GOOGLE_CALLBACK_URL: z.string().url(),
+  WEB_APP_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32, 'Use at least 32 characters (openssl rand -base64 32)'),
+  JWT_EXPIRES_IN: z.string().min(1).default('7d'),
+  // Optional allowlist. Blank accepts any Google account.
+  AUTH_ALLOWED_EMAILS: z.string().default(''),
   MAIL_TRANSPORT: z.enum(['file', 'smtp']).default('file'),
   SMTP_HOST: z.string().min(1).default('localhost'),
   SMTP_PORT: z.coerce.number().int().positive().default(1025),

@@ -50,8 +50,15 @@ async function bootstrap() {
     .setTitle('Mail Sender API')
     .setDescription('Bulk mail dispatcher')
     .setVersion('0.1.0')
+    .addBearerAuth()
     .build();
-  SwaggerModule.setup(prefix + '/docs', app, SwaggerModule.createDocument(app, swagger));
+
+  const document = SwaggerModule.createDocument(app, swagger);
+  // Applied to the whole document rather than decorating every controller:
+  // all routes but /health and the sign-in pair need a bearer token, so the
+  // Authorize button in Swagger UI should apply everywhere by default.
+  document.security = [{ bearer: [] }];
+  SwaggerModule.setup(prefix + '/docs', app, document);
 
   // 0.0.0.0, not the default localhost: a container's health check and
   // router reach the process from outside its own loopback interface.

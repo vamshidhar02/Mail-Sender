@@ -56,6 +56,35 @@ services:
       - key: CORS_ORIGINS
         sync: false
 
+      # ---------- Google OAuth ----------
+      # From the OAuth client at console.cloud.google.com/apis/credentials.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+      # Must appear verbatim under "Authorised redirect URIs" on that client,
+      # pointing at THIS service, including the /api prefix.
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+
+      # The Vercel dashboard the callback hands the browser back to. Same
+      # value as CORS_ORIGINS, without a trailing slash.
+      - key: WEB_APP_URL
+        sync: false
+
+      # Signing key for the session JWT: openssl rand -base64 32
+      # Changing it signs everyone out immediately.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+
+      # Comma-separated addresses allowed to sign in. Blank accepts ANY
+      # Google account, which is the current deployment's setting.
+      - key: AUTH_ALLOWED_EMAILS
+        sync: false
+
       # ---------- Resend over SMTP ----------
       - key: MAIL_TRANSPORT
         value: smtp

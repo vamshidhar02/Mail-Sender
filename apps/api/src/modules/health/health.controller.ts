@@ -1,9 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { Public } from '../auth/decorators/public.decorator';
+
 import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 
+// Public in full: Render's health check has no token to present, and an
+// unauthenticated liveness probe is the point of one.
+@Public()
 @ApiTags('health')
 @Controller('health')
 export class HealthController {

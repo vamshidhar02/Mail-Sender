@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { validateEnv } from './config/env.validation';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './modules/mail/mail.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
 import { TemplatesModule } from './modules/templates/templates.module';
@@ -20,6 +21,9 @@ import { HealthModule } from './modules/health/health.module';
       envFilePath: ['.env.local', '.env', '../../.env'],
     }),
     PrismaModule,
+    // Registers the global JwtAuthGuard, so it must be imported before the
+    // feature modules whose routes it protects.
+    AuthModule,
     MailModule,
     ContactsModule,
     TemplatesModule,
